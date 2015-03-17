@@ -66,6 +66,11 @@
         sql: "SELECT * FROM mudf14q3pub",
         cartocss: "#mudf14q3pub{marker-line-opacity: 1; marker-placement: point; marker-width: 10; marker-type: ellipse; marker-line-color: #FFF; marker-line-width: 1.5; marker-allow-overlap: false;} #mudf14q3pub[discipl='HSC'] {marker-fill:#A6CEE3;} #mudf14q3pub[discipl='GMU'] {marker-fill:#1F78B4;} #mudf14q3pub[discipl='HST'] {marker-fill:#B2DF8A;} #mudf14q3pub[discipl='ART'] {marker-fill:#33A02C;} #mudf14q3pub[discipl='BOT'] {marker-fill:#FB9A99;} #mudf14q3pub[discipl='ZAW'] {marker-fill:#E31A1C;} #mudf14q3pub[discipl='SCI'] {marker-fill:#FDBF6F;} #mudf14q3pub[discipl='CMU'] {marker-fill:#FF7F00;} #mudf14q3pub[discipl='NAT'] {marker-fill: #CAB2D6;}" 
       }
+
+      cartodb.createLayer(map, layerUrl)
+        .addTo(map)
+        .on('done', function(layer) {
+          layer.getSubLayer(0).set(subLayerOptions);
         }).on('error', function() {
           //log the error
       });
@@ -98,8 +103,8 @@
       <div id="interface_container" style="width:20%; float:left; padding-left: 10px; padding-top: 10px">
 
              <div id="search_selector">
-                <input type="text" value="Search.." onclick='Clear(this);'>
-                <div id="search" class="btn btn-default">Go</div>
+                <input type="text" value="search" onclick='Clear(this);'>
+                <div id="search" class="btn btn-default">Go!</div>
              </div>
 
              <div id="layer_selector" class="cartodb_infobox btn-group">
@@ -119,9 +124,7 @@
                  <li><a href="#" data="sci">Science and Technology Museums</a></li>
              </ul>
           </div>
-          <div>
-            
-          </div>
+
           <div id="about_blurb">
           <h3>About:</h3>
           <p>This data comes from the <a href="www.imls.gov">Institute of Museum and Library Services</a> <a href="http://www.imls.gov/research/museum_universe_data_file.aspx">Museum Universe Data File (MUDF)</a> which contains basic identifying information of known museums and related organizations in the United States.</p></div>
@@ -152,7 +155,6 @@
       </div>
     </div>
     -->
-
 
 <!--
     <div class="container">
