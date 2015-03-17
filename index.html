@@ -4,42 +4,48 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>Museum Locator</title>
 
-    <!-- Bootstrap -->
+    <!-- Bootstrap css -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Custom styles for this template -->
+     <!-- CartoDB css -->
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
+
+    <!-- Bootstrap css -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
+
+    <!-- DataTables css -->  
+    <link rel="stylesheet" href="http://cdn.datatables.net/1.10.5/css/jquery.dataTables.min.css" />
+
+    <!-- default custom css -->
     <link href="css/starter-template.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
-  
+    <style>
+      html, body {width:100%; height:100%; padding: 10; margin: 0;}
+      #cartodb-map { width: 80%; height:100%; background: black; margin-left: 20%;}
+    </style>
+
+    <!-- DataTables j-->  
+    <script src="http://cdn.datatables.net/1.10.5/js/jquery.dataTables.min.js"></script>
+
+    <!-- CartoDB js -->
     <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
+
+    <!-- Bootstrap js -->
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+    <!-- jQuery js -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 
-   <!-- jQuery (necessary for Bootstrap's JavaScript plugins)
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script> -->
-    <!-- Include all compiled plugins (below), or include individual files as needed 
-    <script src="js/bootstrap.min.js"></script> -->
-
-  <!--[if lte IE 8]>
-    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.ie.css" />
-  <![endif]-->
-  <style>
-    html, body {width:100%; height:100%; padding: 10; margin: 0;}
-    #cartodb-map { width: 80%; height:100%; background: black; margin-left: 20%;}
-  </style>
-
-
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>s
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
+    <!-- initialize datatable 
+    <script class="init">
+      $(document).ready(function() {
+        $('#MyDataTable').DataTable();
+      });
+    </script>
+    -->
+    <!-- initialize cartodb map -->
     <script>
     var map;
     function init(){
@@ -50,7 +56,7 @@
       })
 
       L.tileLayer('https://dnv9my2eseobd.cloudfront.net/v3/cartodb.map-4xtxp73f/{z}/{x}/{y}.png', {
-        attribution: 'Mapbox <a href="http://mapbox.com/about/maps" target="_blank">Terms &amp; Feedback</a>'
+        attribution: 'Mapbox a< href="http://mapbox.com/about/maps" target="_blank">Terms &amp; Feedback</a>'
       }).addTo(map);
 
       var layerUrl = 'http://imls.cartodb.com/api/v2/viz/a46bb158-eccd-11e3-a0c1-0e10bcd91c2b/viz.json';
@@ -58,23 +64,18 @@
       // change the query for the first layer
       var subLayerOptions = {
         sql: "SELECT * FROM mudf14q3pub",
-        cartocss: "#mudf14q3pub{marker-fill-opacity: 0.9; marker-width: 10; marker-line-color: #FFF; marker-line-width: 1.5;}"
+        cartocss: "#mudf14q3pub{marker-line-opacity: 1; marker-placement: point; marker-width: 10; marker-type: ellipse; marker-line-color: #FFF; marker-line-width: 1.5; marker-allow-overlap: false;} #mudf14q3pub[discipl='HSC'] {marker-fill:#A6CEE3;} #mudf14q3pub[discipl='GMU'] {marker-fill:#1F78B4;} #mudf14q3pub[discipl='HST'] {marker-fill:#B2DF8A;} #mudf14q3pub[discipl='ART'] {marker-fill:#33A02C;} #mudf14q3pub[discipl='BOT'] {marker-fill:#FB9A99;} #mudf14q3pub[discipl='ZAW'] {marker-fill:#E31A1C;} #mudf14q3pub[discipl='SCI'] {marker-fill:#FDBF6F;} #mudf14q3pub[discipl='CMU'] {marker-fill:#FF7F00;} #mudf14q3pub[discipl='NAT'] {marker-fill: #CAB2D6;}" 
       }
-
-      cartodb.createLayer(map, layerUrl)
-        .addTo(map)
-        .on('done', function(layer) {
-          layer.getSubLayer(0).set(subLayerOptions);
         }).on('error', function() {
           //log the error
-        });
+      });
     }  
-  </script>
+    </script>
   </head>
 
   <body onload="init()">
-     <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
+     <nav class="navbar navbar-inverse navbar-fixed-top" style="background: #ADD8E6">
+      <div class="container" >
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
@@ -82,7 +83,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">Museum Locator</a>
+          <a class="navbar-brand" href="#" style="color:white">Museum Locator</a>
         </div>
         <!--
         <div id="navbar" class="collapse navbar-collapse">
@@ -97,8 +98,8 @@
       <div id="interface_container" style="width:20%; float:left; padding-left: 10px; padding-top: 10px">
 
              <div id="search_selector">
-                <input type="text" value="search" onclick="Clear(this);">
-                <div id="search" class="btn btn-default">Search</div>
+                <input type="text" value="Search.." onclick='Clear(this);'>
+                <div id="search" class="btn btn-default">Go</div>
              </div>
 
              <div id="layer_selector" class="cartodb_infobox btn-group">
@@ -128,18 +129,38 @@
           <div id="download" class="btn btn-default">Download this data</div>
       </div>
       <div id='cartodb-map'></div>
+      <!--
+      <div id='datatable'>
+          <table id="MyDataTable" class="display" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>Column 1</th>
+                    <th>Column 2</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Row 1 Data 1</td>
+                    <td>Row 1 Data 2</td>
+                </tr>
+                <tr>
+                    <td>Row 2 Data 1</td>
+                    <td>Row 2 Data 2</td>
+                </tr>
+            </tbody>
+          </table>
+      </div>
     </div>
+    -->
+
 
 <!--
     <div class="container">
 
       <div class="starter-template">
 -->
-       
-        
-
-      </div>
-
     </div><!-- /.container -->
+    </div>
+          
   </body>
 </html>

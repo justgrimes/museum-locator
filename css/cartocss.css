@@ -1,0 +1,40 @@
+/** category visualization */
+
+#mudf14q3pub {
+   marker-fill-opacity: 0.9;
+   marker-line-color: #FFF;
+   marker-line-width: 1.5;
+   marker-line-opacity: 1;
+   marker-placement: point;
+   marker-type: ellipse;
+   marker-width: 10;
+   marker-allow-overlap: true;
+}
+
+#mudf14q3pub[discipl="HSC"] {
+   marker-fill: #A6CEE3;
+}
+#mudf14q3pub[discipl="GMU"] {
+   marker-fill: #1F78B4;
+}
+#mudf14q3pub[discipl="HST"] {
+   marker-fill: #B2DF8A;
+}
+#mudf14q3pub[discipl="ART"] {
+   marker-fill: #33A02C;
+}
+#mudf14q3pub[discipl="BOT"] {
+   marker-fill: #FB9A99;
+}
+#mudf14q3pub[discipl="ZAW"] {
+   marker-fill: #E31A1C;
+}
+#mudf14q3pub[discipl="SCI"] {
+   marker-fill: #FDBF6F;
+}
+#mudf14q3pub[discipl="CMU"] {
+   marker-fill: #FF7F00;
+}
+#mudf14q3pub[discipl="NAT"] {
+   marker-fill: #CAB2D6;
+}
