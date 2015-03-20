@@ -15,9 +15,9 @@
     <!-- Bootstrap css -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
 
-    <!-- DataTables css -->  
-    <link rel="stylesheet" href="http://cdn.datatables.net/1.10.5/css/jquery.dataTables.min.css" />
-
+    <!-- DataTables css -->
+    <!-- <link rel="stylesheet" href="http://cdn.datatables.net/1.10.5/css/jquery.dataTables.min.css" /> -->
+    
     <!-- default custom css -->
     <link href="css/starter-template.css" rel="stylesheet">
 
@@ -26,8 +26,8 @@
       #cartodb-map { width: 80%; height:100%; background: black; margin-left: 20%;}
     </style>
 
-    <!-- DataTables j-->  
-    <script src="http://cdn.datatables.net/1.10.5/js/jquery.dataTables.min.js"></script>
+    <!-- DataTables js -->  
+    <!-- <script src="http://cdn.datatables.net/1.10.5/js /jquery.dataTables.min.js"></script> -->
 
     <!-- CartoDB js -->
     <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
@@ -48,6 +48,62 @@
     <!-- initialize cartodb map -->
     <script>
     var map;
+
+    // get current location
+    // var x = document.getElementById("demo");
+    // function getLocation() {
+    //   if (navigator.geolocation) {
+    //     navigator.geolocation.getCurrentPosition(showPosition);
+    //   } else {
+    //     x.innerHTML = "Geolocation is not supported by this browser.";
+    //   }
+    // }
+    // function showPosition(position) {
+    //   x.innerHTML = "Latitude: " + position.coords.latitude + 
+    //   "<br>Longitude: " + position.coords.longitude; 
+    // }
+
+    //var 
+
+    //var qcount = $.getJSON(URL, function(json)){
+    //   console.log( "JSON Data: " + json.count);
+    //    alert(json.count);
+    //});
+
+    // Display count and name 
+    //function displayQuery(){
+    //  alert("displayQuery");
+    //  URL = "https://imls.cartodb.com/api/v2/sql?q=SELECT count(*) FROM mudf15q1pub";
+    //}
+
+    // Create layer selector
+    function createSelector(layer) {
+
+      var sql =  new cartodb.SQL({ user: 'imls' });
+
+      var $options = $(".layer_selector").find("li");
+      $options.click(function(e) {
+
+          // get the area of the selected layer
+          var $li = $(e.target);
+          var selected = $li.attr('data');
+
+          // deselect all and select the clicked one
+          $options.removeClass('selected');
+          $li.addClass('selected');
+
+          // create query based on data from the layer
+          var query = "select * from mudf15q1pub";
+
+          if(selected !== "ALL") {
+            query = "select * from mudf15q1pub where discipl='" + selected + "'";
+          }
+          // change the query in the layer to update the map
+          //layer.setQuery(query);
+          layer.setSQL(query)
+      });
+    }
+
     function init(){
       // initiate leaflet map
       map = new L.Map('cartodb-map', { 
@@ -56,25 +112,48 @@
       })
 
       L.tileLayer('https://dnv9my2eseobd.cloudfront.net/v3/cartodb.map-4xtxp73f/{z}/{x}/{y}.png', {
-        attribution: 'Mapbox a< href="http://mapbox.com/about/maps" target="_blank">Terms &amp; Feedback</a>'
+        attribution: 'Mapbox <a href="http://mapbox.com/about/maps" target="_blank">Terms &amp; Feedback</a>'
       }).addTo(map);
 
-      var layerUrl = 'http://imls.cartodb.com/api/v2/viz/a46bb158-eccd-11e3-a0c1-0e10bcd91c2b/viz.json';
+      var layerUrl = 'http://imls.cartodb.com/api/v2/viz/6e1e4e64-ce7a-11e4-be57-0e018d66dc29/viz.json';
 
-      // change the query for the first layer
-      var subLayerOptions = {
-        sql: "SELECT * FROM mudf14q3pub",
-        cartocss: "#mudf14q3pub{marker-line-opacity: 1; marker-placement: point; marker-width: 10; marker-type: ellipse; marker-line-color: #FFF; marker-line-width: 1.5; marker-allow-overlap: false;} #mudf14q3pub[discipl='HSC'] {marker-fill:#A6CEE3;} #mudf14q3pub[discipl='GMU'] {marker-fill:#1F78B4;} #mudf14q3pub[discipl='HST'] {marker-fill:#B2DF8A;} #mudf14q3pub[discipl='ART'] {marker-fill:#33A02C;} #mudf14q3pub[discipl='BOT'] {marker-fill:#FB9A99;} #mudf14q3pub[discipl='ZAW'] {marker-fill:#E31A1C;} #mudf14q3pub[discipl='SCI'] {marker-fill:#FDBF6F;} #mudf14q3pub[discipl='CMU'] {marker-fill:#FF7F00;} #mudf14q3pub[discipl='NAT'] {marker-fill: #CAB2D6;}" 
-      }
+       // change the query for the first layer
+      var subLayerOptions = [{
+      sql: "SELECT * FROM mudf15q1pub",
+      cartocss: "#mudf15q1pub{marker-line-opacity: 1; marker-placement: point; marker-width: 10; marker-type: ellipse; marker-line-color: #FFF; marker-line-width: 1.5; marker-allow-overlap: false;} #mudf15q1pub[discipl='HSC'] {marker-fill:#A6CEE3;} #mudf15q1pub[discipl='GMU'] {marker-fill:#1F78B4;} #mudf15q1pub[discipl='HST'] {marker-fill:#B2DF8A;} #mudf15q1pub[discipl='ART'] {marker-fill:#33A02C;} #mudf15q1pub[discipl='BOT'] {marker-fill:#FB9A99;} #mudf15q1pub[discipl='ZAW'] {marker-fill:#E31A1C;} #mudf15q1pub[discipl='SCI'] {marker-fill:#FDBF6F;} #mudf15q1pub[discipl='CMU'] {marker-fill:#FF7F00;} #mudf15q1pub[discipl='NAT'] {marker-fill: #CAB2D6;}"
+      }]
 
-      cartodb.createLayer(map, layerUrl)
-        .addTo(map)
-        .on('done', function(layer) {
-          layer.getSubLayer(0).set(subLayerOptions);
-        }).on('error', function() {
-          //log the error
+      // For storing the sublayer
+      var sublayer;
+
+    //   // add data layer to map
+    //   cartodb.createLayer(map, layerUrl)
+    //     .addTo(map)
+    //     .on('done', function(vis, layers) {
+    //        //layer.getSubLayer(0).set(subLayerOptions);
+    //        sublayer = layer.getSubLayer(0);
+    //        createSelector(sublayer);
+    //        //createSelector(layers[0])
+    //     }).on('error', function() {
+    //       //log the error
+    //       console.log("error: " + err);
+    //    });
+    // }
+
+     // Add data layer to your map
+    cartodb.createLayer(map, layerUrl)
+     .addTo(map)
+     .done(function(layer) {
+        sublayer = layer.getSubLayer(0);
+        createSelector(sublayer);
+        //var vs = cdb.vis.Overlay.create('search',map.viz,{});
+        //vs.show();
+        //$('#map').append(vs.render().el);
+      })
+     .error(function(err) {
+        console.log("error: " + err);
       });
-    }  
+    }
     </script>
   </head>
 
@@ -102,34 +181,42 @@
 
       <div id="interface_container" style="width:20%; float:left; padding-left: 10px; padding-top: 10px">
 
-             <div id="search_selector">
+             <!-- <div id="search_selector">
                 <input type="text" value="search" onclick='Clear(this);'>
                 <div id="search" class="btn btn-default">Go!</div>
+                <hr>
              </div>
+            -->
+<!--              <div id="findnear" class="btn-group">
+               <div id="findme" class="btn btn-default" onclick="getLocation()">Find Near Me</div>
+             </div> 
+            <div><hr></div>
+             -->
 
-             <div id="layer_selector" class="cartodb_infobox btn-group">
+             
+
+             <div id="dropselect" class="layer_selector cartodb_infobox btn-group">
              <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#">Select Museum Type
                  <span class="caret"></span>
              </a>
              <ul class="dropdown-menu" role="menu">
-                 <li><a href="#" data="" class="selected">-- ALL -- </a></li>
-                <li><a href="#" data="gmu">General Museums or Uncategorized</a></li>
-                 <li><a href="#" data="art">Art Museums</a></li>
-                  <li><a href="#" data="cmu">Children's Museums</a></li>
-                 <li><a href="#" data="bot">Arboretums, Botanical Gardens, and Nature Centers</a></li>
-                 <li><a href="#" data="zaw">Zoos, Aquariums, and Wildlife Conservation </a></li>
-                 <li><a href="#" data="hst">History Museums </a></li>
-                 <li><a href="#" data="nat">Natural History and Natural Science Museums</a></li>
-                 <li><a href="#" data="hsc">Historical Societies/Historic Preservation</a></li>
-                 <li><a href="#" data="sci">Science and Technology Museums</a></li>
+                 <li><a href="#" data="ALL" class="selected"> SHOW ALL MUSEUMS </a></li>
+                 <li><a href="#" data="GMU">General Museums/Uncategorized</a></li>
+                 <li><a href="#" data="ART">Art Museums</a></li>
+                 <li><a href="#" data="CMU">Children's Museums</a></li>
+                 <li><a href="#" data="BOT">Arboretums, Botanical Gardens, &amp; Nature Centers</a></li>
+                 <li><a href="#" data="ZAW">Zoos, Aquariums, &amp; Wildlife Conservation </a></li>
+                 <li><a href="#" data="HST">History Museums </a></li>
+                 <li><a href="#" data="NAT">Natural History &amp; Natural Science Museums</a></li>
+                 <li><a href="#" data="HSC">Historical Societies &amp; Historic Preservation</a></li>
+                 <li><a href="#" data="SCI">Science &amp; Technology Museums</a></li>
              </ul>
           </div>
-
+          <div><hr></div>
           <div id="about_blurb">
-          <h3>About:</h3>
+          <h3>About Data</h3>
           <p>This data comes from the <a href="www.imls.gov">Institute of Museum and Library Services</a> <a href="http://www.imls.gov/research/museum_universe_data_file.aspx">Museum Universe Data File (MUDF)</a> which contains basic identifying information of known museums and related organizations in the United States.</p></div>
-
-          <div id="download" class="btn btn-default">Download this data</div>
+          <div id="download" class="btn btn-default"><a href="http://www.imls.gov/assets/1/AssetManager/mudf15q1pub_csv.zip">Download this data</a></div>
       </div>
       <div id='cartodb-map'></div>
       <!--
