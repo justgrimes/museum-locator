@@ -16,7 +16,8 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
 
     <!-- DataTables css -->
-    <!-- <link rel="stylesheet" href="http://cdn.datatables.net/1.10.5/css/jquery.dataTables.min.css" /> -->
+    <link rel="stylesheet" href="http://cdn.datatables.net/1.10.5/css/jquery.dataTables.min.css" /> 
+
     
     <!-- default custom css -->
     <link href="css/starter-template.css" rel="stylesheet">
@@ -26,8 +27,12 @@
       #cartodb-map { width: 80%; height:100%; background: black; margin-left: 20%;}
     </style>
 
+    <!-- jQuery js -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+
     <!-- DataTables js -->  
-    <!-- <script src="http://cdn.datatables.net/1.10.5/js /jquery.dataTables.min.js"></script> -->
+    <script src="http://cdn.datatables.net/1.10.5/js/jquery.dataTables.min.js"></script> 
+    <script src="http://cdn.datatables.net/plug-ins/f2c75b7247b/integration/bootstrap/3/dataTables.bootstrap.js"></script>
 
     <!-- CartoDB js -->
     <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
@@ -35,46 +40,63 @@
     <!-- Bootstrap js -->
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 
-    <!-- jQuery js -->
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 
-    <!-- initialize datatable 
-    <script class="init">
-      $(document).ready(function() {
-        $('#MyDataTable').DataTable();
-      });
-    </script>
-    -->
+
     <!-- initialize cartodb map -->
     <script>
     var map;
 
     // get current location
-    // var x = document.getElementById("demo");
-    // function getLocation() {
-    //   if (navigator.geolocation) {
-    //     navigator.geolocation.getCurrentPosition(showPosition);
-    //   } else {
-    //     x.innerHTML = "Geolocation is not supported by this browser.";
-    //   }
-    // }
-    // function showPosition(position) {
-    //   x.innerHTML = "Latitude: " + position.coords.latitude + 
-    //   "<br>Longitude: " + position.coords.longitude; 
-    // }
+    // credit: http://html5doctor.com/finding-your-position-with-geolocation/
+    function detectUserLocation(){
+      if (navigator.geolocation) {
+        var timeoutVal = 10 * 1000 * 1000;
+        navigator.geolocation.watchPosition(
+          mapToPosition, 
+          alertError,
+          { enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0 }
+        );
+      }
+      else {
+        alert("Geolocation is not supported by this browser");
+      }
+      
+      function alertError(error) {
+        var errors = { 
+          1: 'Permission denied',
+          2: 'Position unavailable',
+          3: 'Request timeout'
+        };
+        alert("Error: " + errors[error.code]);
+      }
+    }
 
-    //var 
+    // change map to user position
+    function mapToPosition(position) {
+      lon = position.coords.longitude;
+      lat = position.coords.latitude;
+      map.setView(new L.LatLng(lat,lon), 14);
+      new L.CircleMarker([lat,lon],{radius: 4}).addTo(map);
+    }
 
-    //var qcount = $.getJSON(URL, function(json)){
-    //   console.log( "JSON Data: " + json.count);
-    //    alert(json.count);
-    //});
-
-    // Display count and name 
-    //function displayQuery(){
-    //  alert("displayQuery");
-    //  URL = "https://imls.cartodb.com/api/v2/sql?q=SELECT count(*) FROM mudf15q1pub";
-    //}
+    // get current query count 
+    function queryCount(cquery,qtype) {
+        $.getJSON("https://imls.cartodb.com/api/v2/sql?q=SELECT count(*) FROM mudf15q1pub" + cquery, function(dat) {
+          $.each(dat.rows, function(key, val) {
+            $('#qcount').html((dat.rows[0].count).toLocaleString('en'));
+          });
+        });
+      if (qtype=="ALL") {$('#qtype').html("Museums");}
+      else if (qtype=="GMU") {$('#qtype').html("Uncategorized museums");}
+      else if (qtype=="ART") {$('#qtype').html("Art museums");}
+      else if (qtype=="CMU") {$('#qtype').html("Children's museums");}
+      else if (qtype=="BOT") {$('#qtype').html("Arboretums, botanical gardens, &amp; nature centers");}
+      else if (qtype=="ZAW") {$('#qtype').html("Zoos, aquariums, &amp; wildlife conservation organizations");}
+      else if (qtype=="HST") {$('#qtype').html("History museums");}
+      else if (qtype=="NAT") {$('#qtype').html("Natural history &amp; natural science museums");}
+      else if (qtype=="HSC") {$('#qtype').html("Historical societies &amp; historic preservation organizations");}
+      else if (qtype=="SCI") {$('#qtype').html("Science &amp; technology museums");}
+    }
 
     // Create layer selector
     function createSelector(layer) {
@@ -101,10 +123,22 @@
           // change the query in the layer to update the map
           //layer.setQuery(query);
           layer.setSQL(query)
+
+          if(selected !== "ALL") {
+            queryCount(" WHERE discipl='" + selected + "'",selected);
+          } else {
+            queryCount("","ALL");
+          }
       });
     }
 
     function init(){
+      // set initial query count
+      queryCount("","ALL");
+
+      //initialize datatable
+      //$('#sqlTable').DataTable();
+
       // initiate leaflet map
       map = new L.Map('cartodb-map', { 
         center: [40,-98],
@@ -169,11 +203,12 @@
           </button>
           <a class="navbar-brand" href="#" style="color:white">Museum Locator</a>
         </div>
-        <!--
+      
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
           </ul>
-        </div>/.nav-collapse -->
+        </div>
+
       </div>
     </nav>
 
@@ -181,47 +216,73 @@
 
       <div id="interface_container" style="width:20%; float:left; padding-left: 10px; padding-top: 10px">
 
-             <!-- <div id="search_selector">
-                <input type="text" value="search" onclick='Clear(this);'>
-                <div id="search" class="btn btn-default">Go!</div>
+             <div id="search_selector">
+                <input type="text" class="form-control" placeholder="Search for..." onclick='Clear(this);'>
+                <span class="input-group-btn">
+                  <button class="btn btn-default" type="button">Go!</button>
+                </span>
                 <hr>
              </div>
-            -->
-<!--              <div id="findnear" class="btn-group">
-               <div id="findme" class="btn btn-default" onclick="getLocation()">Find Near Me</div>
-             </div> 
+
+
+            <div id="findnear" class="btn-group">
+               <div id="findme" class="btn btn-default" onclick="detectUserLocation()">Find Near Me</div>
+            </div> 
+            
             <div><hr></div>
-             -->
 
-             
-
-             <div id="dropselect" class="layer_selector cartodb_infobox btn-group">
-             <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#">Select Museum Type
+            <!--
+            
+            <form role="form">
+              <div id="dropselect" class="form-group layer_selector cartodb_infobox btn-group">
+                <label for="sel1">Select list:</label>--> <!--
+                <select class="form-control">  
+                   <option><a href="#" data="ALL" class="selected">All museums</a></option>
+                   <option><a href="#" data="ART">Art Museums</a></option>
+                   <option><a href="#" data="CMU">Children's Museums</a></option>
+                   <option><a href="#" data="HST">History Museums </a></option>
+                   <option><a href="#" data="HSC">Historical Societies &amp; Historic Preservation</a></option>
+                   <option><a href="#" data="NAT">Natural History &amp; Natural Science Museums</a></option>
+                   <option><a href="#" data="SCI">Science &amp; Technology Museums</a></option>
+                   <option><a href="#" data="BOT">Arboretums, Botanical Gardens, &amp; Nature Centers</a></option>
+                   <option><a href="#" data="ZAW">Zoos, Aquariums, &amp; Wildlife Conservation </a></option>
+                   <option><a href="#" data="GMU">General Museums/Uncategorized</a></option>
+                </select>
+              </div>
+            </form>
+            -->
+            <div id="dropselect" class="layer_selector cartodb_infobox btn-group">
+             <a class="btn btn-default " data-toggle="dropdown" href="#">Filter by Museum Type
                  <span class="caret"></span>
              </a>
+
              <ul class="dropdown-menu" role="menu">
                  <li><a href="#" data="ALL" class="selected"> SHOW ALL MUSEUMS </a></li>
-                 <li><a href="#" data="GMU">General Museums/Uncategorized</a></li>
                  <li><a href="#" data="ART">Art Museums</a></li>
                  <li><a href="#" data="CMU">Children's Museums</a></li>
+                 <li><a href="#" data="HST">History Museums </a></li>
+                 <li><a href="#" data="HSC">Historical Societies &amp; Historic Preservation</a></li>
+                 <li><a href="#" data="NAT">Natural History &amp; Natural Science Museums</a></li>
+                 <li><a href="#" data="SCI">Science &amp; Technology Museums</a></li>
                  <li><a href="#" data="BOT">Arboretums, Botanical Gardens, &amp; Nature Centers</a></li>
                  <li><a href="#" data="ZAW">Zoos, Aquariums, &amp; Wildlife Conservation </a></li>
-                 <li><a href="#" data="HST">History Museums </a></li>
-                 <li><a href="#" data="NAT">Natural History &amp; Natural Science Museums</a></li>
-                 <li><a href="#" data="HSC">Historical Societies &amp; Historic Preservation</a></li>
-                 <li><a href="#" data="SCI">Science &amp; Technology Museums</a></li>
-             </ul>
+                 <li><a href="#" data="GMU">General Museums/Uncategorized</a></li>
+             </ul> 
+          </div>
+          
+          <div>
+            <p><h1 id='qcount'>...</h1><h4 id='qtype'>...</h4></p>
           </div>
           <div><hr></div>
-          <div id="about_blurb">
+          <div id='about_blurb'>
           <h3>About Data</h3>
           <p>This data comes from the <a href="www.imls.gov">Institute of Museum and Library Services</a> <a href="http://www.imls.gov/research/museum_universe_data_file.aspx">Museum Universe Data File (MUDF)</a> which contains basic identifying information of known museums and related organizations in the United States.</p></div>
           <div id="download" class="btn btn-default"><a href="http://www.imls.gov/assets/1/AssetManager/mudf15q1pub_csv.zip">Download this data</a></div>
       </div>
       <div id='cartodb-map'></div>
-      <!--
+      
       <div id='datatable'>
-          <table id="MyDataTable" class="display" cellspacing="0" width="100%">
+          <table id="sqlTable" class="display" cellspacing="0" width="100%">
             <thead>
                 <tr>
                     <th>Column 1</th>
@@ -241,7 +302,6 @@
           </table>
       </div>
     </div>
-    -->
 
 <!--
     <div class="container">
