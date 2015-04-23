@@ -6,20 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Museum Locator</title>
 
-    <!-- Bootstrap css -->
+    <!-- css -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
-
-     <!-- CartoDB css -->
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
-
-    <!-- Bootstrap css -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
-
-    <!-- DataTables css -->
-    <link rel="stylesheet" href="http://cdn.datatables.net/1.10.5/css/jquery.dataTables.min.css" /> 
-
-    
-    <!-- default custom css -->
     <link href="css/starter-template.css" rel="stylesheet">
 
     <style>
@@ -27,57 +17,33 @@
       #cartodb-map { width: 80%; height:100%; background: black; margin-left: 20%;}
     </style>
 
-    <!-- jQuery js -->
+    <!-- scripts -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-
-    <!-- DataTables js -->  
     <script src="http://cdn.datatables.net/1.10.5/js/jquery.dataTables.min.js"></script> 
     <script src="http://cdn.datatables.net/plug-ins/f2c75b7247b/integration/bootstrap/3/dataTables.bootstrap.js"></script>
-
-    <!-- CartoDB js -->
     <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
-
-    <!-- Bootstrap js -->
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-
-
 
     <!-- initialize cartodb map -->
     <script>
     var map;
 
-    // get current location
-    // credit: http://html5doctor.com/finding-your-position-with-geolocation/
-    function detectUserLocation(){
-      if (navigator.geolocation) {
-        var timeoutVal = 10 * 1000 * 1000;
-        navigator.geolocation.watchPosition(
-          mapToPosition, 
-          alertError,
-          { enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0 }
-        );
-      }
-      else {
-        alert("Geolocation is not supported by this browser");
-      }
-      
-      function alertError(error) {
-        var errors = { 
-          1: 'Permission denied',
-          2: 'Position unavailable',
-          3: 'Request timeout'
-        };
-        alert("Error: " + errors[error.code]);
+    // press "enter" on input cause trigger search
+    function searchKeyPress(e){
+      e = e || window.event;
+      if (e.keyCode == 13){
+        document.getElementById('btnSearch').click();
       }
     }
 
     // change map to user position
-    function mapToPosition(position) {
-      lon = position.coords.longitude;
-      lat = position.coords.latitude;
-      map.setView(new L.LatLng(lat,lon), 14);
-      new L.CircleMarker([lat,lon],{radius: 4}).addTo(map);
-    }
+
+    //function mapToPosition(position) {
+    //  lon = position.coords.longitude;
+    //  lat = position.coords.latitude;
+    //  map.setView(new L.LatLng(lat,lon), 14);
+    //  new L.CircleMarker([lat,lon],{radius: 4}).addTo(map);
+    //}
 
     // get current query count 
     function queryCount(cquery,qtype) {
@@ -86,7 +52,7 @@
             $('#qcount').html((dat.rows[0].count).toLocaleString('en'));
           });
         });
-      if (qtype=="ALL") {$('#qtype').html("Museums");}
+      if (qtype=="ALL") {$('#qtype').html("Museums and related organizations");}
       else if (qtype=="GMU") {$('#qtype').html("Uncategorized museums");}
       else if (qtype=="ART") {$('#qtype').html("Art museums");}
       else if (qtype=="CMU") {$('#qtype').html("Children's museums");}
@@ -98,11 +64,36 @@
       else if (qtype=="SCI") {$('#qtype').html("Science &amp; technology museums");}
     }
 
+    // clean query results
+    function cleanAddress(address) {
+        address = address.toLowerCase().replace(/[;,\.:\?#]/g,"").replace(/ *$/g,"");
+        return address;
+    }
+
+    // Process search query
+    function processSearchQuery(){
+      var cleanquery = cleanAddress($('#txtSearch').val());
+      var url = "http://nominatim.openstreetmap.org/search/" + cleanquery + "?format=json";
+      var req = new XMLHttpRequest();
+      req.open("GET", url, true);
+      req.onreadystatechange = function(){
+            if(req.readyState == 4) {
+                  var resp = JSON.parse(req.responseText);
+                  //var resp = jQuery.parseJSON(req.responseText);
+                  var lat = resp[0]['lat'];
+                  var lon = resp[0]['lon'];
+
+                  map.setView(new L.LatLng(lat,lon), 14);
+                  //new L.CircleMarker([lat,lon],{radius: 4}).addTo(map);                  
+                  //map.panTo([lat, lon]);
+                  //map.setZoom(14); 
+            }
+      }      
+      req.send();
+    };
+
     // Create layer selector
     function createSelector(layer) {
-
-      var sql =  new cartodb.SQL({ user: 'imls' });
-
       var $options = $(".layer_selector").find("li");
       $options.click(function(e) {
 
@@ -120,8 +111,8 @@
           if(selected !== "ALL") {
             query = "select * from mudf15q1pub where discipl='" + selected + "'";
           }
+
           // change the query in the layer to update the map
-          //layer.setQuery(query);
           layer.setSQL(query)
 
           if(selected !== "ALL") {
@@ -135,9 +126,6 @@
     function init(){
       // set initial query count
       queryCount("","ALL");
-
-      //initialize datatable
-      //$('#sqlTable').DataTable();
 
       // initiate leaflet map
       map = new L.Map('cartodb-map', { 
@@ -153,26 +141,12 @@
 
        // change the query for the first layer
       var subLayerOptions = [{
-      sql: "SELECT * FROM mudf15q1pub",
-      cartocss: "#mudf15q1pub{marker-line-opacity: 1; marker-placement: point; marker-width: 10; marker-type: ellipse; marker-line-color: #FFF; marker-line-width: 1.5; marker-allow-overlap: false;} #mudf15q1pub[discipl='HSC'] {marker-fill:#A6CEE3;} #mudf15q1pub[discipl='GMU'] {marker-fill:#1F78B4;} #mudf15q1pub[discipl='HST'] {marker-fill:#B2DF8A;} #mudf15q1pub[discipl='ART'] {marker-fill:#33A02C;} #mudf15q1pub[discipl='BOT'] {marker-fill:#FB9A99;} #mudf15q1pub[discipl='ZAW'] {marker-fill:#E31A1C;} #mudf15q1pub[discipl='SCI'] {marker-fill:#FDBF6F;} #mudf15q1pub[discipl='CMU'] {marker-fill:#FF7F00;} #mudf15q1pub[discipl='NAT'] {marker-fill: #CAB2D6;}"
+        sql: "SELECT * FROM mudf15q1pub",
+        cartocss: "#mudf15q1pub{marker-line-opacity: 1; marker-placement: point; marker-width: 10; marker-type: ellipse; marker-line-color: #FFF; marker-line-width: 1.5; marker-allow-overlap: false;} #mudf15q1pub[discipl='HSC'] {marker-fill:#A6CEE3;} #mudf15q1pub[discipl='GMU'] {marker-fill:#1F78B4;} #mudf15q1pub[discipl='HST'] {marker-fill:#B2DF8A;} #mudf15q1pub[discipl='ART'] {marker-fill:#33A02C;} #mudf15q1pub[discipl='BOT'] {marker-fill:#FB9A99;} #mudf15q1pub[discipl='ZAW'] {marker-fill:#E31A1C;} #mudf15q1pub[discipl='SCI'] {marker-fill:#FDBF6F;} #mudf15q1pub[discipl='CMU'] {marker-fill:#FF7F00;} #mudf15q1pub[discipl='NAT'] {marker-fill: #CAB2D6;}"
       }]
 
       // For storing the sublayer
       var sublayer;
-
-    //   // add data layer to map
-    //   cartodb.createLayer(map, layerUrl)
-    //     .addTo(map)
-    //     .on('done', function(vis, layers) {
-    //        //layer.getSubLayer(0).set(subLayerOptions);
-    //        sublayer = layer.getSubLayer(0);
-    //        createSelector(sublayer);
-    //        //createSelector(layers[0])
-    //     }).on('error', function() {
-    //       //log the error
-    //       console.log("error: " + err);
-    //    });
-    // }
 
      // Add data layer to your map
     cartodb.createLayer(map, layerUrl)
@@ -180,14 +154,12 @@
      .done(function(layer) {
         sublayer = layer.getSubLayer(0);
         createSelector(sublayer);
-        //var vs = cdb.vis.Overlay.create('search',map.viz,{});
-        //vs.show();
-        //$('#map').append(vs.render().el);
       })
      .error(function(err) {
         console.log("error: " + err);
       });
     }
+
     </script>
   </head>
 
@@ -195,62 +167,38 @@
      <nav class="navbar navbar-inverse navbar-fixed-top" style="background: #ADD8E6">
       <div class="container" >
         <div class="navbar-header">
+          <!--
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
+          -->
           <a class="navbar-brand" href="#" style="color:white">Museum Locator</a>
         </div>
-      
+    
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
+            <li><a href="./">Map View</a></li>
+            <li><a href="dt/">Table View</a></li>
           </ul>
         </div>
-
       </div>
     </nav>
 
     <div id="awrapper" style="width:100%; height:100%;">
 
-      <div id="interface_container" style="width:20%; float:left; padding-left: 10px; padding-top: 10px">
+      <div id="interface_container" style="width:250px; float:left; padding-left: 10px; padding-top: 10px">
 
              <div id="search_selector">
-                <input type="text" class="form-control" placeholder="Search for..." onclick='Clear(this);'>
-                <span class="input-group-btn">
-                  <button class="btn btn-default" type="button">Go!</button>
-                </span>
-                <hr>
+                <form action=# method="post">
+                  <input type="text" id="txtSearch" style="width:175px; float: left;" class="form-control" placeholder="Search address" onkeypress="searchKeyPress(event);"> <!-- <input type="submit" value="Go!" class="btn btn-default" onclick='processSearchQuery();'> -->
+                  <button id="btnSearch" class="btn btn-default" style="float: right;" type="button" onclick='processSearchQuery();'>Go!</button>
+                </form>
              </div>
 
-
-            <div id="findnear" class="btn-group">
-               <div id="findme" class="btn btn-default" onclick="detectUserLocation()">Find Near Me</div>
-            </div> 
-            
-            <div><hr></div>
-
-            <!--
-            
-            <form role="form">
-              <div id="dropselect" class="form-group layer_selector cartodb_infobox btn-group">
-                <label for="sel1">Select list:</label>--> <!--
-                <select class="form-control">  
-                   <option><a href="#" data="ALL" class="selected">All museums</a></option>
-                   <option><a href="#" data="ART">Art Museums</a></option>
-                   <option><a href="#" data="CMU">Children's Museums</a></option>
-                   <option><a href="#" data="HST">History Museums </a></option>
-                   <option><a href="#" data="HSC">Historical Societies &amp; Historic Preservation</a></option>
-                   <option><a href="#" data="NAT">Natural History &amp; Natural Science Museums</a></option>
-                   <option><a href="#" data="SCI">Science &amp; Technology Museums</a></option>
-                   <option><a href="#" data="BOT">Arboretums, Botanical Gardens, &amp; Nature Centers</a></option>
-                   <option><a href="#" data="ZAW">Zoos, Aquariums, &amp; Wildlife Conservation </a></option>
-                   <option><a href="#" data="GMU">General Museums/Uncategorized</a></option>
-                </select>
-              </div>
-            </form>
-            -->
+            <div><br><br></div>
             <div id="dropselect" class="layer_selector cartodb_infobox btn-group">
              <a class="btn btn-default " data-toggle="dropdown" href="#">Filter by Museum Type
                  <span class="caret"></span>
@@ -280,29 +228,6 @@
           <div id="download" class="btn btn-default"><a href="http://www.imls.gov/assets/1/AssetManager/mudf15q1pub_csv.zip">Download this data</a></div>
       </div>
       <div id='cartodb-map'></div>
-      
-      <div id='datatable'>
-          <table id="sqlTable" class="display" cellspacing="0" width="100%">
-            <thead>
-                <tr>
-                    <th>Column 1</th>
-                    <th>Column 2</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Row 1 Data 1</td>
-                    <td>Row 1 Data 2</td>
-                </tr>
-                <tr>
-                    <td>Row 2 Data 1</td>
-                    <td>Row 2 Data 2</td>
-                </tr>
-            </tbody>
-          </table>
-      </div>
-    </div>
-
 <!--
     <div class="container">
 
