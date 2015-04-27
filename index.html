@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Museum Locator</title>
+    <title>Museum Data Explorer - BETA</title>
 
     <!-- css -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -35,15 +35,6 @@
         document.getElementById('btnSearch').click();
       }
     }
-
-    // change map to user position
-
-    //function mapToPosition(position) {
-    //  lon = position.coords.longitude;
-    //  lat = position.coords.latitude;
-    //  map.setView(new L.LatLng(lat,lon), 14);
-    //  new L.CircleMarker([lat,lon],{radius: 4}).addTo(map);
-    //}
 
     // get current query count 
     function queryCount(cquery,qtype) {
@@ -83,10 +74,19 @@
                   var lat = resp[0]['lat'];
                   var lon = resp[0]['lon'];
 
-                  map.setView(new L.LatLng(lat,lon), 14);
-                  //new L.CircleMarker([lat,lon],{radius: 4}).addTo(map);                  
-                  //map.panTo([lat, lon]);
-                  //map.setZoom(14); 
+                  //change view
+                  map.setView(new L.LatLng(lat,lon), 13);
+
+                  //get count - save for later
+                  //$.getJSON("https://imls.cartodb.com/api/v2/sql?q=SELECT count(*) from mudf15q1pub where st_intersects(the_geom,st_setsrid(ST_Buffer(ST_makepoint(" + lon + "," + lat + "),0.1),4326))", function(dat) {
+                  //  $.each(dat.rows, function(key, val) {
+                      //$('#qcount').html((dat.rows[0].count).toLocaleString('en'));
+                      //alert(dat.rows[0].count);            
+                  //  });
+                  //});
+                  //update search results
+                  //var query = "SELECT * from mudf15q1pub where st_intersects(the_geom,st_setsrid(ST_Buffer(ST_makepoint(" + lon + "," + lat + "),0.1),4326))";
+                  //layer.setSQL(query);
             }
       }      
       req.send();
@@ -133,16 +133,19 @@
         zoom: 4
       })
 
+      //mudf default https://a.tiles.mapbox.com/v3/justgrimes.i8danj85/{z}/{x}/{y}.png
+      //black https://dnv9my2eseobd.cloudfront.net/v3/cartodb.map-4xtxp73f/{z}/{x}/{y}.png
+      //grey https://a.tiles.mapbox.com/v3/justgrimes.m0d4aoom/{z}/{x}/{y}.png
       L.tileLayer('https://dnv9my2eseobd.cloudfront.net/v3/cartodb.map-4xtxp73f/{z}/{x}/{y}.png', {
         attribution: 'Mapbox <a href="http://mapbox.com/about/maps" target="_blank">Terms &amp; Feedback</a>'
       }).addTo(map);
 
-      var layerUrl = 'http://imls.cartodb.com/api/v2/viz/6e1e4e64-ce7a-11e4-be57-0e018d66dc29/viz.json';
+      var layerUrl = 'https://imls.cartodb.com/api/v2/viz/6e1e4e64-ce7a-11e4-be57-0e018d66dc29/viz.json';
 
        // change the query for the first layer
       var subLayerOptions = [{
         sql: "SELECT * FROM mudf15q1pub",
-        cartocss: "#mudf15q1pub{marker-line-opacity: 1; marker-placement: point; marker-width: 10; marker-type: ellipse; marker-line-color: #FFF; marker-line-width: 1.5; marker-allow-overlap: false;} #mudf15q1pub[discipl='HSC'] {marker-fill:#A6CEE3;} #mudf15q1pub[discipl='GMU'] {marker-fill:#1F78B4;} #mudf15q1pub[discipl='HST'] {marker-fill:#B2DF8A;} #mudf15q1pub[discipl='ART'] {marker-fill:#33A02C;} #mudf15q1pub[discipl='BOT'] {marker-fill:#FB9A99;} #mudf15q1pub[discipl='ZAW'] {marker-fill:#E31A1C;} #mudf15q1pub[discipl='SCI'] {marker-fill:#FDBF6F;} #mudf15q1pub[discipl='CMU'] {marker-fill:#FF7F00;} #mudf15q1pub[discipl='NAT'] {marker-fill: #CAB2D6;}"
+        cartocss: "#mudf15q1pub { marker-fill-opacity: 0.8; marker-line-color: #FFF; marker-line-width: 0.75; marker-line-opacity: 0.8; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-allow-overlap: true;} #mudf15q1pub[discipl='HSC'] {marker-fill: #377eb8;} #mudf15q1pub[discipl='GMU'] {marker-fill: #999999;} #mudf15q1pub[discipl='HST'] {marker-fill: #fff333;} #mudf15q1pub[discipl='ART'] {marker-fill: #e41a1c;} #mudf15q1pub[discipl='BOT'] {marker-fill: #4daf4a;} #mudf15q1pub[discipl='ZAW'] {marker-fill: #ff7f00;} #mudf15q1pub[discipl='SCI'] {marker-fill: #984ea3;} #mudf15q1pub[discipl='CMU'] {marker-fill: #f781bf;} #mudf15q1pub[discipl='NAT'] {marker-fill: #a65628;}"
       }]
 
       // For storing the sublayer
@@ -175,7 +178,7 @@
             <span class="icon-bar"></span>
           </button>
           -->
-          <a class="navbar-brand" href="#" style="color:white">Museum Locator</a>
+          <a class="navbar-brand" href="#" style="color:white">Museum Locator (BETA)</a>
         </div>
     
         <div id="navbar" class="collapse navbar-collapse">
@@ -191,40 +194,41 @@
 
       <div id="interface_container" style="width:250px; float:left; padding-left: 10px; padding-top: 10px">
 
-             <div id="search_selector">
-                  <input type="text" id="txtSearch" style="width:175px; float: left;" class="form-control" placeholder="Search address" onkeypress="searchKeyPress(event);"> <!-- <input type="submit" value="Go!" class="btn btn-default" onclick='processSearchQuery();'> -->
-                  <button id="btnSearch" class="btn btn-default" style="float: right;" type="button" onclick='processSearchQuery();'>Go!</button>
-             </div>
-
-            <div><br><br></div>
+          <div>
+            <p><h1 id='qcount'>...</h1><h4 id='qtype'>...</h4></p>
+          </div>
+          
             <div id="dropselect" class="layer_selector cartodb_infobox btn-group">
              <a class="btn btn-default " data-toggle="dropdown" href="#">Filter by Museum Type
                  <span class="caret"></span>
              </a>
 
              <ul class="dropdown-menu" role="menu">
-                 <li><a href="#" data="ALL" class="selected"> SHOW ALL MUSEUMS </a></li>
-                 <li><a href="#" data="ART">Art Museums</a></li>
-                 <li><a href="#" data="CMU">Children's Museums</a></li>
-                 <li><a href="#" data="HST">History Museums </a></li>
-                 <li><a href="#" data="HSC">Historical Societies &amp; Historic Preservation</a></li>
-                 <li><a href="#" data="NAT">Natural History &amp; Natural Science Museums</a></li>
-                 <li><a href="#" data="SCI">Science &amp; Technology Museums</a></li>
-                 <li><a href="#" data="BOT">Arboretums, Botanical Gardens, &amp; Nature Centers</a></li>
-                 <li><a href="#" data="ZAW">Zoos, Aquariums, &amp; Wildlife Conservation </a></li>
-                 <li><a href="#" data="GMU">General Museums/Uncategorized</a></li>
+                 <li><a href="#" data="ALL" class="selected">-- SHOW ALL MUSEUMS --</a></li>
+                 <li><a href="#" data="ART" style="background:#e41a1c;">Art Museums</a></li>
+                 <li><a href="#" data="CMU" style="background:#f781bf;">Children's Museums</a></li>
+                 <li><a href="#" data="HST" style="background:#fff333;">History Museums</a></li>
+                 <li><a href="#" data="HSC" style="background:#377eb8;">Historical Societies &amp; Historic Preservation</a></li>
+                 <li><a href="#" data="NAT" style="background:#a65628;">Natural History &amp; Natural Science Museums</a></li>
+                 <li><a href="#" data="SCI" style="background:#984ea3;">Science &amp; Technology Museums</a></li>
+                 <li><a href="#" data="BOT" style="background:#4daf4a;">Arboretums, Botanical Gardens, &amp; Nature Centers</a></li>
+                 <li><a href="#" data="ZAW" style="background:#ff7f00;">Zoos, Aquariums, &amp; Wildlife Conservation </a></li>
+                 <li><a href="#" data="GMU" style="background:#999999;">General Museums/Uncategorized</a></li>
              </ul> 
           </div>
-          
-          <div>
-            <p><h1 id='qcount'>...</h1><h4 id='qtype'>...</h4></p>
+
+          <div id="search_selector">
+                  <br>
+                  <input type="text" id="txtSearch" style="width:175px; float: left;" class="form-control" placeholder="Find a Location" onkeypress="searchKeyPress(event);"> <!-- <input type="submit" value="Go!" class="btn btn-default" onclick='processSearchQuery();'> -->
+                  <button id="btnSearch" class="btn btn-default" style="float: right;" type="button" onclick='processSearchQuery();'>Go!</button>
           </div>
-          <div><hr></div>
-          <div id='about_blurb'>
-          <h3>About Data</h3>
-          <p>This data comes from the <a href="www.imls.gov">Institute of Museum and Library Services</a> <a href="http://www.imls.gov/research/museum_universe_data_file.aspx">Museum Universe Data File (MUDF)</a> which contains basic identifying information of known museums and related organizations in the United States.</p></div>
-          <div id="download" class="btn btn-default"><a href="http://www.imls.gov/assets/1/AssetManager/mudf15q1pub_csv.zip">Download this data</a></div>
+          <div><br><br><hr></div>
+        <div id='about_blurb'>
+          <img width=175px src=img/imls.jpg><br>
+          <p>This data comes from the <a href="http://www.imls.gov">Institute of Museum and Library Services (IMLS)</a> <a href="http://www.imls.gov/research/museum_universe_data_file.aspx">Museum Universe Data File (MUDF)</a>, which contains basic identifying information of known museums and related organizations in the United States. Questions? Contact <a href=mail:research@imls.gov>research@imls.gov</a></p></div>
+          <div id="download" class="btn btn-default"><a href="http://www.imls.gov/assets/1/AssetManager/mudf15q1pub_csv.zip">Download Data</a></div>
       </div>
+
       <div id='cartodb-map'></div>
 <!--
     <div class="container">
